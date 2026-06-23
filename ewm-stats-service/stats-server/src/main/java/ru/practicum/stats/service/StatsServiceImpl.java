@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.stats.dto.EndpointHitDto;
 import ru.practicum.stats.dto.ViewStatsDto;
+import ru.practicum.stats.exception.BadRequestException;
 import ru.practicum.stats.mapper.StatsMapper;
 import ru.practicum.stats.repository.StatsRepository;
 
@@ -29,14 +30,18 @@ public class StatsServiceImpl implements StatsService {
     public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique) {
         log.info("Fetching stats from DB: start={}, end={}, uris={}, unique={}", start, end, uris, unique);
 
+        List<ViewStatsDto> result;
+
         if (start.isAfter(end)) {
-            throw new IllegalArgumentException("Start date cannot be after end date");
+            throw new BadRequestException("Start date cannot be after end date");
         }
 
         if (unique) {
-            return statsRepository.getUniqueStats(start, end, uris);
+            result = statsRepository.getUniqueStats(start, end, uris);
         } else {
-            return statsRepository.getStats(start, end, uris);
+            result = statsRepository.getStats(start, end, uris);
         }
+        log.info("FOUND STATS = {}", result);
+        return result;
     }
 }

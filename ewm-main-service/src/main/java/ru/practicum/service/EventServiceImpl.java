@@ -477,7 +477,10 @@ public class EventServiceImpl implements EventService {
                 return e1.getEventDate().compareTo(e2.getEventDate());
             });
         }
-
+        saveHit(
+                request.getRequestURI(),
+                request.getRemoteAddr()
+        );
         return events.stream()
                 .map(eventMapper::toShortDto)
                 .collect(Collectors.toList());
