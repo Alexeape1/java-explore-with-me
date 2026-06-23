@@ -13,8 +13,10 @@ public class EventSearchParams {
     private String text;
     private List<Long> categories;
     private Boolean paid;
+
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime rangeStart;
+
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime rangeEnd;
     private Boolean onlyAvailable;
@@ -25,7 +27,7 @@ public class EventSearchParams {
     @AssertTrue(message = "rangeEnd must be after rangeStart")
     public boolean isRangeValid() {
         if (rangeStart == null || rangeEnd == null) {
-            return true; // если одна из дат не передана, пропускаем проверку
+            return true;
         }
         return rangeEnd.isAfter(rangeStart);
     }

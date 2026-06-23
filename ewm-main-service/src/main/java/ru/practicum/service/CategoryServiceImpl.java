@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
-    private final CategoryMapper categoryMapper;  // Инжектим маппер
+    private final CategoryMapper categoryMapper;
     private final EventRepository eventRepository;
 
     @Override
@@ -33,11 +33,9 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryDto addCategory(NewCategoryDto newCategoryDto) {
         log.info("Adding new category: {}", newCategoryDto);
 
-        // Используем маппер для преобразования DTO -> Entity
         Category category = categoryMapper.toEntity(newCategoryDto);
         Category saved = categoryRepository.save(category);
 
-        // Используем маппер для преобразования Entity -> DTO
         return categoryMapper.toDto(saved);
     }
 
@@ -63,9 +61,9 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = categoryRepository.findById(catId)
                 .orElseThrow(() -> new NotFoundException("Category with id=" + catId + " was not found"));
 
-       if (eventRepository.existsByCategoryId(catId)) {
-           throw new ConflictException("The category is not empty");
-       }
+        if (eventRepository.existsByCategoryId(catId)) {
+            throw new ConflictException("The category is not empty");
+        }
 
         categoryRepository.delete(category);
     }
@@ -76,7 +74,7 @@ public class CategoryServiceImpl implements CategoryService {
 
         return categoryRepository.findAll(PageRequest.of(from / size, size, Sort.by(Sort.Direction.ASC, "id")))
                 .stream()
-                .map(categoryMapper::toDto)  // Используем маппер
+                .map(categoryMapper::toDto)
                 .collect(Collectors.toList());
     }
 

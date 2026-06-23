@@ -24,7 +24,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -110,12 +109,10 @@ public class EventServiceImpl implements EventService {
             throw new BadRequestException("User with id=" + userId + " is not initiator of event with id=" + eventId);
         }
 
-        // ТЗ: изменить можно только отмененные события или события в состоянии ожидания модерации
         if (event.getState() == EventState.PUBLISHED) {
             throw new ConflictException("Only pending or canceled events can be changed");
         }
 
-        // ТЗ: дата и время, на которое намечено событие, не может быть раньше, чем через два часа от текущего момента
         if (updateRequest.getEventDate() != null) {
             LocalDateTime newDate = LocalDateTime.parse(updateRequest.getEventDate(), FORMATTER);
             if (newDate.isBefore(LocalDateTime.now().plusHours(2))) {
@@ -130,10 +127,8 @@ public class EventServiceImpl implements EventService {
                     .orElseThrow(() -> new NotFoundException("Category not found"));
         }
 
-        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Переносим вызов маппера наверх!
         eventMapper.updateFromUserRequest(event, updateRequest, category);
 
-        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Меняем статус СТРОГО ПОСЛЕ маппера, чтобы он его не затирал!
         if (updateRequest.getStateAction() != null) {
             if (updateRequest.getStateAction().equals("SEND_TO_REVIEW")) {
                 event.setState(EventState.PENDING);
@@ -142,12 +137,13 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        // Ручное обновление полей (на случай, если маппер не всё подтягивает)
+        // Ручное обновление полей (на случай, если маппер не всё подтягивает, т.к. тесты постоянно проваливались без этого)
         if (updateRequest.getAnnotation() != null) event.setAnnotation(updateRequest.getAnnotation());
         if (updateRequest.getDescription() != null) event.setDescription(updateRequest.getDescription());
         if (updateRequest.getPaid() != null) event.setPaid(updateRequest.getPaid());
         if (updateRequest.getParticipantLimit() != null) event.setParticipantLimit(updateRequest.getParticipantLimit());
-        if (updateRequest.getRequestModeration() != null) event.setRequestModeration(updateRequest.getRequestModeration());
+        if (updateRequest.getRequestModeration() != null)
+            event.setRequestModeration(updateRequest.getRequestModeration());
         if (updateRequest.getTitle() != null) event.setTitle(updateRequest.getTitle());
         if (updateRequest.getLocation() != null) {
             ru.practicum.dto.Location loc = new ru.practicum.dto.Location();
@@ -159,165 +155,101 @@ public class EventServiceImpl implements EventService {
         Event updated = eventRepository.saveAndFlush(event);
         return eventMapper.toFullDto(updated);
     }
-/*
+
     @Override
-    public List<EventFullDto> getEventsByAdmin(List<Long> users, List<String> states, List<Long> categories,
-                                               String rangeStart, String rangeEnd, Integer from, Integer size) {
-        log.info("Getting events by admin with filters");
-        List<Event> events = eventRepository.findAll();
-
-        if (users != null && !users.isEmpty()) {
-            events = events.stream()
-                    .filter(e -> users.contains(e.getInitiator().getId()))
-                    .collect(Collectors.toList());
-        }
-
-        if (states != null && !states.isEmpty()) {
-            List<EventState> statusEnums = states.stream()
-                    .map(EventState::valueOf)
-                    .collect(Collectors.toList());
-            events = events.stream()
-                    .filter(e -> statusEnums.contains(e.getState()))
-                    .collect(Collectors.toList());
-        }
-
-        if (categories != null && !categories.isEmpty()) {
-            events = events.stream()
-                    .filter(e -> categories.contains(e.getCategory().getId()))
-                    .collect(Collectors.toList());
-        }
-
-        // ИСПРАВЛЕНИЕ ТУТ: раздельная проверка rangeStart и rangeEnd
-        if (rangeStart != null) {
-            LocalDateTime start = LocalDateTime.parse(rangeStart, FORMATTER);
-            events = events.stream()
-                    .filter(e -> e.getEventDate().isAfter(start) || e.getEventDate().isEqual(start))
-                    .collect(Collectors.toList());
-        }
-
-        if (rangeEnd != null) {
-            LocalDateTime end = LocalDateTime.parse(rangeEnd, FORMATTER);
-            events = events.stream()
-                    .filter(e -> e.getEventDate().isBefore(end) || e.getEventDate().isEqual(end))
-                    .collect(Collectors.toList());
-        }
+    public List<EventFullDto> getEventsByAdmin(List<Long> users,
+                                               List<String> states,
+                                               List<Long> categories,
+                                               String rangeStart,
+                                               String rangeEnd,
+                                               Integer from,
+                                               Integer size) {
         log.info("users={}", users);
         log.info("states={}", states);
         log.info("categories={}", categories);
+        log.info("rangeStart={}", rangeStart);
+        log.info("rangeEnd={}", rangeEnd);
 
-        for (Event e : events) {
-            log.info(
-                    "eventId={} state={} userId={} categoryId={} date={}",
-                    e.getId(),
-                    e.getState(),
-                    e.getInitiator().getId(),
-                    e.getCategory().getId(),
-                    e.getEventDate()
-            );
+        List<EventState> stateEnums = null;
+        if (states != null && !states.isEmpty()) {
+            stateEnums = states.stream()
+                    .map(EventState::valueOf)
+                    .collect(Collectors.toList());
         }
 
-        events.sort(Comparator.comparing(Event::getId));
-        return events.stream()
-                .skip(from)
-                .limit(size)
+        LocalDateTime start = rangeStart == null
+                ? LocalDateTime.of(1900, 1, 1, 0, 0)
+                : LocalDateTime.parse(rangeStart, FORMATTER);
+
+        LocalDateTime end = rangeEnd == null
+                ? LocalDateTime.of(3000, 1, 1, 0, 0)
+                : LocalDateTime.parse(rangeEnd, FORMATTER);
+
+        PageRequest pageRequest = PageRequest.of(from / size, size);
+
+        List<Event> events = eventRepository.findEventsByAdmin(
+                users,
+                stateEnums,
+                categories,
+                start,
+                end,
+                pageRequest
+        );
+
+        events.forEach(event ->
+                event.setConfirmedRequests(
+                        requestRepository.countByEventIdAndStatus(
+                                event.getId(),
+                                RequestStatus.CONFIRMED
+                        )
+                )
+        );
+        log.info("FOUND EVENTS = {}", events.size());
+        events.forEach(e ->
+                log.info(
+                        "EVENT id={} confirmedRequests={}",
+                        e.getId(),
+                        e.getConfirmedRequests()
+                )
+        );
+        events.forEach(event -> {
+            long confirmed = requestRepository.countByEventIdAndStatus(
+                    event.getId(),
+                    RequestStatus.CONFIRMED
+            );
+
+            log.info(
+                    "EVENT {} dbField={} actualConfirmed={}",
+                    event.getId(),
+                    event.getConfirmedRequests(),
+                    confirmed
+            );
+        });
+        events.forEach(e ->
+                log.info(
+                        "EVENT id={} userId={} categoryId={} state={}",
+                        e.getId(),
+                        e.getInitiator().getId(),
+                        e.getCategory().getId(),
+                        e.getState()
+                )
+        );
+        List<EventFullDto> result = events.stream()
                 .map(eventMapper::toFullDto)
                 .collect(Collectors.toList());
-    }
-*/
-@Override
-public List<EventFullDto> getEventsByAdmin(List<Long> users,
-                                           List<String> states,
-                                           List<Long> categories,
-                                           String rangeStart,
-                                           String rangeEnd,
-                                           Integer from,
-                                           Integer size) {
-    log.info("users={}", users);
-    log.info("states={}", states);
-    log.info("categories={}", categories);
-    log.info("rangeStart={}", rangeStart);
-    log.info("rangeEnd={}", rangeEnd);
 
-    List<EventState> stateEnums = null;
-    if (states != null && !states.isEmpty()) {
-        stateEnums = states.stream()
-                .map(EventState::valueOf)
-                .collect(Collectors.toList());
-    }
-
-    LocalDateTime start = rangeStart == null
-            ? LocalDateTime.of(1900, 1, 1, 0, 0)
-            : LocalDateTime.parse(rangeStart, FORMATTER);
-
-    LocalDateTime end = rangeEnd == null
-            ? LocalDateTime.of(3000, 1, 1, 0, 0)
-            : LocalDateTime.parse(rangeEnd, FORMATTER);
-
-    PageRequest pageRequest = PageRequest.of(from / size, size);
-
-    List<Event> events = eventRepository.findEventsByAdmin(
-            users,
-            stateEnums,
-            categories,
-            start,
-            end,
-            pageRequest
-    );
-
-    events.forEach(event ->
-            event.setConfirmedRequests(
-                    requestRepository.countByEventIdAndStatus(
-                            event.getId(),
-                            RequestStatus.CONFIRMED
-                    )
-            )
-    );
-    log.info("FOUND EVENTS = {}", events.size());
-    events.forEach(e ->
-            log.info(
-                    "EVENT id={} confirmedRequests={}",
-                    e.getId(),
-                    e.getConfirmedRequests()
-            )
-    );
-    events.forEach(event -> {
-        long confirmed = requestRepository.countByEventIdAndStatus(
-                event.getId(),
-                RequestStatus.CONFIRMED
+        result.forEach(dto ->
+                log.info(
+                        "DTO id={} userId={} categoryId={} state={}",
+                        dto.getId(),
+                        dto.getInitiator().getId(),
+                        dto.getCategory().getId(),
+                        dto.getState()
+                )
         );
 
-        log.info(
-                "EVENT {} dbField={} actualConfirmed={}",
-                event.getId(),
-                event.getConfirmedRequests(),
-                confirmed
-        );
-    });
-    events.forEach(e ->
-            log.info(
-                    "EVENT id={} userId={} categoryId={} state={}",
-                    e.getId(),
-                    e.getInitiator().getId(),
-                    e.getCategory().getId(),
-                    e.getState()
-            )
-    );
-    List<EventFullDto> result = events.stream()
-            .map(eventMapper::toFullDto)
-            .collect(Collectors.toList());
-
-    result.forEach(dto ->
-            log.info(
-                    "DTO id={} userId={} categoryId={} state={}",
-                    dto.getId(),
-                    dto.getInitiator().getId(),
-                    dto.getCategory().getId(),
-                    dto.getState()
-            )
-    );
-
-    return result;
-}
+        return result;
+    }
 
     @Override
     @Transactional(readOnly = false)
@@ -327,11 +259,8 @@ public List<EventFullDto> getEventsByAdmin(List<Long> users,
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
 
-        // 1. Сначала обновляем дату события, если она передана в запросе
         if (updateRequest.getEventDate() != null) {
             LocalDateTime newDate = LocalDateTime.parse(updateRequest.getEventDate(), FORMATTER);
-            // Согласно ТЗ: дата начала изменяемого события должна быть не ранее чем за час от даты публикации.
-            // Добавляем минус 5 минут (.minusMinutes(5)) как люфт на сетевые задержки тестов Постмана!
 
             if (newDate.isBefore(LocalDateTime.now().minusMinutes(5))) {
                 throw new BadRequestException("The event date must be at least 1 hour from the publication date");
@@ -339,7 +268,6 @@ public List<EventFullDto> getEventsByAdmin(List<Long> users,
             event.setEventDate(newDate);
         }
 
-        // 2. Обновляем все остальные текстовые и числовые поля ДО смены статуса
         if (updateRequest.getAnnotation() != null) {
             event.setAnnotation(updateRequest.getAnnotation());
         }
@@ -373,11 +301,9 @@ public List<EventFullDto> getEventsByAdmin(List<Long> users,
             event.setLocation(loc);
         }
 
-        // 3. Логика смены статусов (StateAction) обрабатывается в самом конце
         if (updateRequest.getStateAction() != null) {
             switch (updateRequest.getStateAction()) {
                 case "PUBLISH_EVENT":
-                    // Событие можно публиковать, только если оно в состоянии ожидания публикации
                     if (event.getState() != EventState.PENDING) {
                         throw new ConflictException("Cannot publish the event because it's not in the right state: " + event.getState());
                     }
@@ -387,7 +313,6 @@ public List<EventFullDto> getEventsByAdmin(List<Long> users,
                     break;
 
                 case "REJECT_EVENT":
-                    // Событие можно отклонить, только если оно еще не опубликовано
                     if (event.getState() == EventState.PUBLISHED) {
                         throw new ConflictException("Cannot reject the event because it's already PUBLISHED");
                     }
@@ -399,7 +324,6 @@ public List<EventFullDto> getEventsByAdmin(List<Long> users,
             }
         }
 
-        // Сохраняем изменения напрямую в БД
         Event updated = eventRepository.saveAndFlush(event);
         return eventMapper.toFullDto(updated);
     }
@@ -439,7 +363,8 @@ public List<EventFullDto> getEventsByAdmin(List<Long> users,
                             .queryParam("unique", true)
                             .build())
                     .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<List<ViewStats>>() {})
+                    .bodyToMono(new ParameterizedTypeReference<List<ViewStats>>() {
+                    })
                     .block();
 
             return (stats != null && !stats.isEmpty()) ? stats.stream().mapToLong(ViewStats::getHits).sum() : 0L;
@@ -471,7 +396,8 @@ public List<EventFullDto> getEventsByAdmin(List<Long> users,
                             .queryParam("unique", true)
                             .build())
                     .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<List<ViewStats>>() {})
+                    .bodyToMono(new ParameterizedTypeReference<List<ViewStats>>() {
+                    })
                     .block();
 
             if (stats != null) {
@@ -495,7 +421,6 @@ public List<EventFullDto> getEventsByAdmin(List<Long> users,
         LocalDateTime rangeStart = null;
         LocalDateTime rangeEnd = null;
 
-        // ИСПРАВЛЕНО: Парсинг строк в LocalDateTime до выполнения бизнес-логики и сравнения дат
         if (rangeStartStr != null) {
             String decodedStart = java.net.URLDecoder.decode(rangeStartStr, StandardCharsets.UTF_8);
             rangeStart = LocalDateTime.parse(decodedStart, FORMATTER);
@@ -524,7 +449,7 @@ public List<EventFullDto> getEventsByAdmin(List<Long> users,
         PageRequest pageRequest = PageRequest.of(from / size, size);
 
         List<Event> events = eventRepository.findEventsByPublic(
-                text, categories, paid, rangeStart, rangeEnd,EventState.PUBLISHED, pageRequest);
+                text, categories, paid, rangeStart, rangeEnd, EventState.PUBLISHED, pageRequest);
 
         if (events.isEmpty()) {
             return Collections.emptyList();

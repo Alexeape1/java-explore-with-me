@@ -21,7 +21,7 @@ public class CompilationMapper {
     public CompilationDto toDto(Compilation compilation) {
         if (compilation == null) return null;
 
-        List<EventShortDto> eventDtos = compilation.getEvents() != null ?
+        List<EventShortDto> eventDto = compilation.getEvents() != null ?
                 compilation.getEvents().stream()
                         .map(eventMapper::toShortDto)
                         .collect(Collectors.toList()) :
@@ -29,7 +29,7 @@ public class CompilationMapper {
 
         return CompilationDto.builder()
                 .id(compilation.getId())
-                .events(eventDtos)
+                .events(eventDto)
                 .pinned(compilation.getPinned())
                 .title(compilation.getTitle())
                 .build();

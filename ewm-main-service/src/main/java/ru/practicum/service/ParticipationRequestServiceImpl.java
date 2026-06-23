@@ -116,7 +116,6 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
 
-        // Проверка: пре-модерация должна быть включена
         if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
             throw new ConflictException("Request moderation is disabled");
         }

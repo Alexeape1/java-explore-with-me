@@ -3,7 +3,6 @@ package ru.practicum.service;
 import jakarta.servlet.http.HttpServletRequest;
 import ru.practicum.dto.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 public interface EventService {

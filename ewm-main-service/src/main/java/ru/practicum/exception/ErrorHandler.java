@@ -53,7 +53,7 @@ public class ErrorHandler {
         return ApiError.builder()
                 .status(HttpStatus.CONFLICT.name())
                 .reason("Integrity constraint has been violated.")
-                .message(e.getMessage()) // можно уточнить, но для тестов достаточно
+                .message(e.getMessage())
                 .timestamp(LocalDateTime.now().format(FORMATTER))
                 .build();
     }
@@ -120,6 +120,7 @@ public class ErrorHandler {
                 .timestamp(LocalDateTime.now().format(FORMATTER))
                 .build();
     }
+
     @ExceptionHandler(MissingServletRequestParameterException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleMissingParams(MissingServletRequestParameterException e) {
