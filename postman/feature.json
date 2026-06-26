@@ -1,219 +1,233 @@
 {
-	"id": "58a9f773-d9a6-40a0-92a6-d06be6ea4775",
-	"name": "Explore With Me - Location Processing",
-	"timestamp": "2026-06-26T09:44:47.050Z",
-	"collection_id": "51674802-f31ea6df-9c5d-461e-b56e-3aa7124ff7d3",
-	"folder_id": 0,
-	"environment_id": "0",
-	"totalPass": 4,
-	"delay": 0,
-	"persist": true,
-	"status": "finished",
-	"startedAt": "2026-06-26T09:44:45.139Z",
-	"totalFail": 8,
-	"results": [
-		{
-			"id": "ae91ac77-311b-4793-bbc0-4c561e064a20",
-			"name": "Create location",
-			"url": "http://localhost:8080/admin/locations",
-			"time": 381,
-			"responseCode": {
-				"code": 500,
-				"name": "Internal Server Error"
-			},
-			"tests": {
-				"Ответ должен содержать код 201": false,
-				"Ответ содержит id": false,
-				"Название сохранено": false
-			},
-			"testPassFailCounts": {
-				"Ответ должен содержать код 201": {
-					"pass": 0,
-					"fail": 1
-				},
-				"Ответ содержит id": {
-					"pass": 0,
-					"fail": 1
-				},
-				"Название сохранено": {
-					"pass": 0,
-					"fail": 1
-				}
-			},
-			"times": [
-				381
-			],
-			"allTests": [
-				{
-					"Ответ должен содержать код 201": false,
-					"Ответ содержит id": false,
-					"Название сохранено": false
-				}
-			]
-		},
-		{
-			"id": "d57b94f7-ee65-468d-85ec-310201eb211e",
-			"name": "Get locations",
-			"url": "http://localhost:8080/admin/locations",
-			"time": 217,
-			"responseCode": {
-				"code": 200,
-				"name": "OK"
-			},
-			"tests": {
-				"Ответ должен содержать код 200": true,
-				"Ответ является массивом": true,
-				"Список содержит хотя бы одну локацию": false
-			},
-			"testPassFailCounts": {
-				"Ответ должен содержать код 200": {
-					"pass": 1,
-					"fail": 0
-				},
-				"Ответ является массивом": {
-					"pass": 1,
-					"fail": 0
-				},
-				"Список содержит хотя бы одну локацию": {
-					"pass": 0,
-					"fail": 1
-				}
-			},
-			"times": [
-				217
-			],
-			"allTests": [
-				{
-					"Ответ должен содержать код 200": true,
-					"Ответ является массивом": true,
-					"Список содержит хотя бы одну локацию": false
-				}
-			]
-		},
-		{
-			"id": "69353c96-4499-4675-a71a-055982ee577c",
-			"name": "Get events in location",
-			"url": "http://localhost:8080/locations/1/events",
-			"time": 55,
-			"responseCode": {
-				"code": 404,
-				"name": "Not Found"
-			},
-			"tests": {
-				"Ответ должен содержать код 200": false,
-				"Ответ является массивом": false,
-				"Найдено событие": false
-			},
-			"testPassFailCounts": {
-				"Ответ должен содержать код 200": {
-					"pass": 0,
-					"fail": 1
-				},
-				"Ответ является массивом": {
-					"pass": 0,
-					"fail": 1
-				},
-				"Найдено событие": {
-					"pass": 0,
-					"fail": 1
-				}
-			},
-			"times": [
-				55
-			],
-			"allTests": [
-				{
-					"Ответ должен содержать код 200": false,
-					"Ответ является массивом": false,
-					"Найдено событие": false
-				}
-			]
-		},
-		{
-			"id": "fdd1459d-dabb-4dff-b01d-84a4a2a53ffa",
-			"name": "Location not found",
-			"url": "http://localhost:8080/locations/999/events",
-			"time": 14,
-			"responseCode": {
-				"code": 404,
-				"name": "Not Found"
-			},
-			"tests": {
-				"Ответ должен содержать код 404": true,
-				"Ответ содержит сообщение об ошибке": true
-			},
-			"testPassFailCounts": {
-				"Ответ должен содержать код 404": {
-					"pass": 1,
-					"fail": 0
-				},
-				"Ответ содержит сообщение об ошибке": {
-					"pass": 1,
-					"fail": 0
-				}
-			},
-			"times": [
-				14
-			],
-			"allTests": [
-				{
-					"Ответ должен содержать код 404": true,
-					"Ответ содержит сообщение об ошибке": true
-				}
-			]
-		},
-		{
-			"id": "db4db584-1614-4880-8da4-42af152cb0a7",
-			"name": "Create invalid location",
-			"url": "http://localhost:8080/admin/locations",
-			"time": 14,
-			"responseCode": {
-				"code": 200,
-				"name": "OK"
-			},
-			"tests": {
-				"Ответ должен содержать код 400": false
-			},
-			"testPassFailCounts": {
-				"Ответ должен содержать код 400": {
-					"pass": 0,
-					"fail": 1
-				}
-			},
-			"times": [
-				14
-			],
-			"allTests": [
-				{
-					"Ответ должен содержать код 400": false
-				}
-			]
-		}
-	],
-	"count": 1,
-	"totalTime": 681,
-	"collection": {
-		"requests": [
-			{
-				"id": "ae91ac77-311b-4793-bbc0-4c561e064a20",
-				"method": "POST"
-			},
-			{
-				"id": "d57b94f7-ee65-468d-85ec-310201eb211e",
-				"method": "GET"
-			},
-			{
-				"id": "69353c96-4499-4675-a71a-055982ee577c",
-				"method": "GET"
-			},
-			{
-				"id": "fdd1459d-dabb-4dff-b01d-84a4a2a53ffa",
-				"method": "GET"
-			},
-			{
-				"id": "db4db584-1614-4880-8da4-42af152cb0a7",
-				"method": "GET"
-			}
-		]
-	}
+  "info": {
+    "_postman_id": "f31ea6df-9c5d-461e-b56e-3aa7124ff7d3",
+    "name": "Explore With Me - Location Processing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "51674802",
+    "_collection_link": "https://go.postman.co/collection/51674802-f31ea6df-9c5d-461e-b56e-3aa7124ff7d3?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Create location",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Ответ должен содержать код 201\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Ответ содержит id\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json.id).to.be.a(\"number\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Название сохранено\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json.name).to.eql(\"Moscow Center\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Moscow Center\",\r\n    \"lat\": 55.7558,\r\n    \"lon\": 37.6176,\r\n    \"radius\": 10\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/admin/locations",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "admin",
+            "locations"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get locations",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Ответ должен содержать код 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Ответ является массивом\", function () {\r",
+              "    pm.expect(pm.response.json()).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Список содержит хотя бы одну локацию\", function () {\r",
+              "    pm.expect(pm.response.json().length).to.be.greaterThan(0);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/admin/locations",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "admin",
+            "locations"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get events in location",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Ответ должен содержать код 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Ответ является массивом\", function () {\r",
+              "    pm.expect(pm.response.json()).to.be.an(\"array\");\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/locations/1/events",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "locations",
+            "1",
+            "events"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Location not found",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Ответ должен содержать код 404\", function () {\r",
+              "    pm.response.to.have.status(404);\r",
+              "});\r",
+              "pm.test(\"Ответ содержит сообщение об ошибке\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json.message).to.exist;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/locations/999/events",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "locations",
+            "999",
+            "events"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create invalid location",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Ответ должен содержать код 400\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"\",\r\n    \"lat\": 55.7558,\r\n    \"lon\": 37.6176,\r\n    \"radius\": 10\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/admin/locations",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "admin",
+            "locations"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
 }
