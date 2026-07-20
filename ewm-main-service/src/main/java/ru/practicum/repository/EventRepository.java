@@ -45,4 +45,20 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             Pageable pageable);
 
     boolean existsByCategoryId(Long categoryId);
+
+    @Query(value = """
+        SELECT *
+        FROM events e
+        WHERE distance(
+            e.lat,
+            e.lon,
+            :lat,
+            :lon
+        ) <= :radius
+        """,
+            nativeQuery = true)
+    List<Event> findEventsInRadius(
+            Double lat,
+            Double lon,
+            Double radius);
 }
